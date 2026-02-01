@@ -119,6 +119,31 @@ async def callbacks(_, q):
 
     d = q.data
 
+    # ---------- ASSISTANT DETAILS ----------
+    if d == "assist_detail":
+        text = "📑 **Assistant Accounts Detail**\n\n"
+        i = 1
+
+        async for a in assistants_db.find():
+            text += (
+                f"{i}) 👤 @{a.get('username','N/A')}\n"
+                f"🆔 ID: `{a.get('assistant_id')}`\n"
+                f"🔑 API_ID: `{a.get('api_id')}`\n"
+                f"👮 Added By: `{a.get('added_by')}`\n"
+                f"❤️ Health: `{a.get('health','UNKNOWN')}`\n"
+                f"🕒 Last Check: `{a.get('last_check','N/A')}`\n\n"
+            )
+            i += 1
+
+        if i == 1:
+            text = "❌ No assistants found."
+
+        return await q.message.edit_text(
+            text,
+            reply_markup=main_menu(),
+            disable_web_page_preview=True
+        )
+
     # ---------- ADD ASSISTANT ----------
     if d == "add_assistant":
         state[uid] = "ADD_API_ID"
