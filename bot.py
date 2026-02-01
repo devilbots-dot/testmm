@@ -1,10 +1,14 @@
+import os
 import asyncio
 from datetime import datetime
+
+from dotenv import load_dotenv
+load_dotenv()
+
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-from pyrogram.errors import FloodWait, RPCError
+from pyrogram.errors import FloodWait
 from motor.motor_asyncio import AsyncIOMotorClient
-
 # ================= CONFIG =================
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 API_ID = int(os.getenv("API_ID"))
@@ -88,16 +92,23 @@ def main_menu():
 # ================= START ===================
 @bot.on_message(filters.command("start"))
 async def start(_, m):
-    if not await is_admin(m.from_user.id):
+    uid = m.from_user.id
+
+    # 🔥 HARD RESET
+    state.pop(uid, None)
+    temp.pop(uid, None)
+
+    if not await is_admin(uid):
         return await m.reply("❌ Unauthorized")
 
-    await m.reply("🤖 **Assistant Manager Bot**", reply_markup=main_menu())
-    await send_log(
-        f"🚀 BOT STARTED\n"
-        f"By: {m.from_user.id}\n"
-        f"Time: {now()}"
+    await m.reply(
+        "🤖 **Assistant Manager Bot**\n\nChoose an option:",
+        reply_markup=main_menu()
     )
 
+    await send_log(
+        f"🚀 BOT STARTED\nBy: {uid}\nTime: {now()}"
+    )
 
 # ================= CALLBACKS ===============
 @bot.on_callback_query()
@@ -391,11 +402,11 @@ async def load_assistants():
 
 
 # ================= RUN =====================
-async def main():
-    await bot.start()
-    await load_assistants()
-    asyncio.create_task(health_monitor())
-    print("Assistant Manager Bot Running...")
-    await asyncio.Event().wait()
+if __name__ == "__main__":
+    print("Starting Assistant Manager Bot...", flush=True)
 
-asyncio.run(main())
+    bot.start()
+    bot.loop.create_task(load_assistants())
+    bot.loop.create_task(health_monitor())
+
+    bot.idle()
