@@ -1,0 +1,11 @@
+version: "3.8"
+
+services:
+  assistant-manager:
+    container_name: assistant_manager_bot
+    build: .
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - .:/app
